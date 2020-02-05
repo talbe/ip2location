@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	var server network.SimpleQueryStringServer
+	var server network.SimpleServer
 	server.Run()
 }
