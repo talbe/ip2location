@@ -46,7 +46,7 @@ func getVisitor(ip string) (*rate.Limiter,error) {
 			return nil, err
 		}
 
-		limiter := rate.NewLimiter(bucketSize, tokenIncreaseRate)
+		limiter := rate.NewLimiter(tokenIncreaseRate, bucketSize)
 		visitors[ip] = &visitor{limiter, time.Now()}
 		return limiter, nil
 	}
@@ -82,19 +82,20 @@ func cleanupVisitors() error {
 func limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			setError(&w, 500)
 			return
 		}
 
 		limiter, err := getVisitor(ip)
 		if err != nil {
 			log.Println("Failed find the visitor")
-			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+			setError(&w, 500)
 		}
 		if limiter.Allow() == false {
-			http.Error(w, http.StatusText(429), http.StatusTooManyRequests)
+			setError(&w, 429)
 			return
 		}
 

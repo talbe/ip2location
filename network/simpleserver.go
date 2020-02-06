@@ -29,10 +29,23 @@ func (this *SimpleServer) Run() error {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/" +apiVersion+ "/" +findCountryApi, this.handler)
+	mux.HandleFunc("/" + apiVersion + "/" +findCountryApi, this.handler)
 	http.ListenAndServe(":" + serverPort, limit(mux))
 
 	return nil
+}
+
+func setError(writer *http.ResponseWriter, errorCode uint32) {
+	var httpError models.HttpError
+	httpError.Error = errorCode
+
+	jsnHttpError, err := json.Marshal(httpError)
+	if err != nil {
+		http.Error(*writer, http.StatusText(500), http.StatusInternalServerError)
+		return
+	}
+
+	(*writer).Write(jsnHttpError)
 }
 
 func (this *SimpleServer) handler(writer http.ResponseWriter, reader *http.Request) {
@@ -41,7 +54,7 @@ func (this *SimpleServer) handler(writer http.ResponseWriter, reader *http.Reque
 	writer.Header().Set("Content-Type", "application/json")
 
 	if !ok || len(ips[0]) < 1 {
-		log.Println("Url Param 'ip' is missing")
+		setError(&writer, 400)
 		return
 	}
 
@@ -49,16 +62,17 @@ func (this *SimpleServer) handler(writer http.ResponseWriter, reader *http.Reque
 	location, err := this.ipLocationHandler.Handle(ip)
 
 	if _, ok := err.(*models.NotFoundError); ok {
-		http.Error(writer, http.StatusText(404), http.StatusNotFound)
+		setError(&writer, 404)
 		return
+
 	} else if _, ok := err.(*models.InternalError); ok {
-		http.Error(writer, http.StatusText(500), http.StatusInternalServerError)
+		setError(&writer, 500)
 		return
 	}
 
 	jsonLocation, err := json.Marshal(location)
 	if err != nil {
-		http.Error(writer, http.StatusText(500), http.StatusInternalServerError)
+		setError(&writer, 500)
 		return
 	}
 
