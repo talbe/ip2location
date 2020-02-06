@@ -2,8 +2,8 @@ package main
 
 import (
 	"testing"
-	"github.com/talbe/src/github.com/IpLocation/network"
-	"github.com/talbe/src/github.com/IpLocation/models"
+	"github.com/IpLocation/network"
+	"github.com/IpLocation/models"
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
