@@ -25,4 +25,4 @@ network/rate/limiter_test.go  - unit testing to verify that the rate limit engin
 
 handlers/iplocation_test.go = unit testing to verify that the iplocation handler working as epected
 
-You can run "go test" to run the tests/
+You can run "go test" from the specified directories above
